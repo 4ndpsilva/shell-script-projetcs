@@ -1,5 +1,12 @@
 #!/bin/bash
 
+##################################################################
+#                                                                #
+# Verifica se o nome digitado é um arquivo ou diretório, depois  #
+# verifica se existe no diretório atual                          #
+#                                                                #
+##################################################################
+
 echo "Digite -1 para sair ou outro valor para continuar" 
 read op
 
