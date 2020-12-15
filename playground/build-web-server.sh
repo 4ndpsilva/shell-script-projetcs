@@ -5,10 +5,10 @@
 #                                        #
 #                                        #
 ##########################################
-#Apagar se existir
+#Apagar todas imagens
 
 echo "Apagar imagem"
-docker system prune -y --all
+docker system prune --all
 
 #Baixar a imagem Docker
 
