@@ -27,13 +27,24 @@ QUANTITY=$(echo $FREE_SPACE | grep -Eo "[[:digit:]]+")
 TYPE=$(echo $FREE_SPACE | grep -Eo "*[K|M|G|k|m|g]")
 
 if [ -n $FREE_SPACE ]; then
-  echo "Espaço Livre = $FREE_SPACE"
-  echo "Quantidade: $QUANTITY"
-  echo "Grandeza: $TYPE"
-  exit 1 
+  if [ $QUANTITY -le 100 ]; then
+    echo "Espaço Livre = $FREE_SPACE"
+    echo "Quantidade: $QUANTITY"
+    echo "Grandeza: $TYPE"
+
+    if [ $TYPE = "G" ]; then
+      if [ $QUANTITY -le 100 ]; then
+        echo "Espaço em disco insuficiente" >&2
+        exit 1
+      fi
+    fi
+
+    # Rotina para liberar espaço - apagar imagens containers não utilizados
+    docker system prune --all
+  fi
 fi
 
-echo "FORA DO IF" >&2
+echo "CONTINUAR EXECUÇÃO"
 exit 1
 
 checkParams "pull"
