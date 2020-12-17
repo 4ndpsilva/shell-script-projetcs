@@ -1,10 +1,11 @@
 #!/bin/bash
-##########################################
-#                                        #
-# Montagem de servidor web Apache httpd  #
-#                                        #
-#                                        #
-##########################################
+
+#####################################################
+#                                                   #
+# Montagem de servidor web Apache httpd com docker  #
+#                                                   #
+#####################################################
+
 #Apagar todas imagens
 
 echo "Apagar imagem"

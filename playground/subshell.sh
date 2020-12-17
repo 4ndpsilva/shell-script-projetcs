@@ -1,5 +1,11 @@
 #!/bin/bash
 
+#####################################################
+#                                                   #
+# Montagem de servidor web Apache httpd com docker  #
+#                                                   #
+#####################################################
+
 rm -rf dirtest
 
 if [ -e "directory" ]; then

@@ -1,5 +1,11 @@
 #!/bin/bash
 
+##########################################
+#                                        #
+# Exibe informações sobre o sistema      #
+#                                        #
+##########################################
+
 echo "Script iniciado..."
 
 #Exibir o hostname do sitema
