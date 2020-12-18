@@ -22,4 +22,4 @@ echo "Dispositivos em bloco disponíveis:
 $(lsblk)"
 
 #Exibir espaço no sistema
-df -h
+df -ah

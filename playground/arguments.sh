@@ -4,7 +4,6 @@
 #                                        #
 # Passagem de argumentos para o script   #
 #                                        #
-#                                        #
 ##########################################
 
 echo "Argumento principal: [ $1 ]"
