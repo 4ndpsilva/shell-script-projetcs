@@ -1,15 +1,15 @@
 #!/bin/bash
 
-echo "BAIXANDO IMAGENS DOCKER..." 
-echo ""
+IMAGES=$1
 
-for IMAGE in $@
+echo "BAIXANDO IMAGENS DOCKER...\n" 
+
+for IMAGE in ${IMAGES[@]}
 do
     docker pull $IMAGE
 done    
 
-echo "PROCESSO FINALIZADO"
-echo ""
+echo "\n PROCESSO FINALIZADO \n"
 
 docker images
 

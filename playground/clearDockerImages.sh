@@ -30,14 +30,14 @@ ENVIRONMENT=$1
 TAG=$2
 
 if [ ! -z $ENVIRONMENT ]; then
-  EXIST_ENV=$(docker images | grep $ENVIRONMENT)
+  EXIST_ENV=$(docker images | grep -w $ENVIRONMENT | awk '{ print $1 }' | sed -n 1p)
   
   if [ -z $EXIST_ENV ]; then
     echo "O ambiente informado não existe" >&2
     exit 1
   else
     if [ ! -z $TAG ]; then
-      EXIST_TAG=$(docker images | grep $TAG)
+      EXIST_TAG=$(docker images | grep -w $ENVIRONMENT | grep -w $TAG | awk '{ print $2 }' | sed -n 1p)
     
       if [ -z $EXIST_TAG ]; then
         echo "A tag informada não existe" >&2
@@ -45,7 +45,7 @@ if [ ! -z $ENVIRONMENT ]; then
       else
         if [[ $TAG != *"latest"* ]] && [[ $TAG != *"current"* ]]; then
           echo "APAGAR IMAGEM COM A TAG [ $TAG ]"
-          docker rmi --force $(docker images | grep $ENVIRONMENT | grep $TAG | awk '{ print $3 }')
+          docker rmi -f $(docker images | grep -w $ENVIRONMENT | grep -w $TAG | awk '{ print $3 }')
         else
           echo "Não é permitido apagar imagens com as tags 'latest' ou 'current'" >&2
           exit 1

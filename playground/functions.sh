@@ -249,14 +249,12 @@ IFS=$OLD
 
 }
 
-
-
 function verifyAvailableSpace(){
-  #Verifica espaço disponível na partição /ebs
+  #Obtem espaço disponível na partição /ebs
   AVAILABLE_SPACE=$(df | awk '/ebs/ { print $4 }')
 
   #Converte de Gigabyte para Kilobyte
-  REQUIRED_SPACE=$(expr $(($1 * 1024 * 1024)))
+  REQUIRED_SPACE=$(($1 * 1024 * 1024))
 
   if [ $REQUIRED_SPACE -gt $AVAILABLE_SPACE ]; then
     echo "Espaço em disco insuficiente" >&2
