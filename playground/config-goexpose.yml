@@ -1,0 +1,323 @@
+# /matera/continuous-deployment/core/goexpose/config
+host: 0.0.0.0
+port: 9900
+pretty_json: true
+endpoints:
+  - path: /info
+    authorizers:
+      - basic
+    methods:
+      GET:
+        type: info
+        description: Info task
+  - path: /config/refresh
+    methods:
+      GET:
+        type: shell
+        config:
+          commands:
+            - command: ./refresh.sh {{.query.env}} {{.query.ref}}
+              chdir: /matera/continuous-deployment/matera-config
+              format: text
+              return_command: false
+        query_params:
+          params:
+            - name: env
+              regexp: .+
+              default: NONE
+            - name: ref
+              regexp: .+
+              default: NONE
+  - path: /tests/run
+    methods:
+      GET:
+        type: shell
+        config:
+          commands:
+            - command: ./run_protected.sh {{.query.server}}
+              chdir: /matera/continuous-deployment/tests/
+              format: text
+              return_command: false
+        query_params:
+          params:
+            - name: server
+              regexp: .+
+              default: NONE
+  - path: /db/refresh-status
+    methods:
+      GET:
+        type: shell
+        config:
+          commands:
+            - command: ./refresh-status.sh
+              chdir: /matera/continuous-deployment/docker-db
+              format: text
+              return_command: false
+  - path: /db/status
+    methods:
+      GET:
+        type: filesystem
+        config:
+          file: status-full.log
+          directory: /matera/continuous-deployment/docker-db/logs
+          output: raw
+  - path: /db/pull
+    authorizers:
+      - basic
+    methods:
+      GET:
+        type: shell
+        config:
+          commands:
+            - command: ./pull.sh {{.query.tag}} {{.query.user}}
+              chdir: /matera/continuous-deployment/docker-db
+              format: text
+              return_command: false
+        query_params:
+          params:
+            - name: tag
+              regexp: .+
+              default: NONE
+            - name: user
+              regexp: .+
+              default: NONE
+  - path: /db/push
+    authorizers:
+      - basic
+    methods:
+      GET:
+        type: shell
+        config:
+          commands:
+            - command: ./push.sh {{.query.tag}} {{.query.user}}
+              chdir: /matera/continuous-deployment/docker-db
+              format: text
+              return_command: false
+        query_params:
+          params:
+            - name: tag
+              regexp: .+
+              default: NONE
+            - name: user
+              regexp: .+
+              default: NONE
+  - path: /db/commit
+    authorizers:
+      - basic
+    methods:
+      GET:
+        type: shell
+        config:
+          commands:
+            - command: ./commit.sh {{.query.tag}} {{.query.user}}
+              chdir: /matera/continuous-deployment/docker-db
+              format: text
+              return_command: false
+        query_params:
+          params:
+            - name: tag
+              regexp: .+
+              default: NONE
+            - name: user
+              regexp: .+
+              default: NONE
+  - path: /db/reset
+    authorizers:
+      - basic
+    methods:
+      GET:
+        type: shell
+        config:
+          commands:
+            - command: ./reset.sh {{.query.tag}} {{.query.user}}
+              chdir: /matera/continuous-deployment/docker-db
+              format: text
+              return_command: false
+        query_params:
+          params:
+            - name: tag
+              regexp: .+
+              default: NONE
+            - name: user
+              regexp: .+
+              default: NONE
+  - path: /db/clean
+    methods:
+      GET:
+        type: shell
+        config:
+          commands:
+            - command: ./clearDockerImages.sh {{.query.env}} {{.query.tag}}
+              chdir: /matera/continuous-deployment/docker-db
+              format: text
+              return_command: false
+        query_params:
+          params:
+            - name: env
+              regexp: .+
+              default: NONE
+            - name: tag
+              regexp: .+
+              default: NONE               
+  - path: /deploy/{product:.+}/{build:[0-9]+}
+    authorizers:
+      - basic
+    methods:
+      POST:
+        type: shell
+        description: Shell task that exposes automatic deploy (download artifacts)
+        config:
+          single_result: 0
+          commands:
+            - command: ./download-artifacts.sh -p {{.url.product}} -b {{.url.build}} -d {{.query.db}} -a {{.query.api}} -g {{.query.gsx}} -e {{.query.encoded}}
+              chdir: /matera/continuous-deployment/core
+              format: json
+              return_command: false
+        # TODO: Change query string to use payload (request body). Payload (request body) approach allows link as value.
+        query_params:
+          params:
+            - name: api
+              regexp: .+
+              default: NONE
+            - name: gsx
+              regexp: .+
+              default: NONE
+            - name: db
+              regexp: .+
+              default: NONE
+            - name: encoded
+              regexp: ^false$|^true$
+              default: "true"
+          return_params: false
+  - path: /deploy/{product:.+}/{build:[0-9]+}/{type:(api|gsx)}
+    authorizers:
+      - basic
+    methods:
+      PUT:
+        type: shell
+        description: Shell task that exposes automatic deploy (API deployment)
+        config:
+          single_result: 0
+          commands:
+            - command: ./deploy-{{.url.type}}.sh -p {{.url.product}} -b {{.url.build}} -a {{.query.artifact}} -e {{.query.encoded}}
+              chdir: /matera/continuous-deployment/core
+              format: json
+              return_command: false
+        # TODO: Change query string to use payload (request body). Payload (request body) approach allows link as value.
+        query_params:
+          params:
+            - name: artifact
+              regexp: .+
+              default: NONE
+            - name: encoded
+              regexp: ^false$|^true$
+              default: "true"
+          return_params: false
+  - path: /deploy/{product:.+}/{build:[0-9]+}/db
+    authorizers:
+      - basic
+    methods:
+      PATCH:
+        type: shell
+        description: Shell task that exposes automatic deploy (database deployment)
+        config:
+          single_result: 0
+          commands:
+            - command: ./deploy-database.sh -p {{.url.product}} -b {{.url.build}} -d {{.query.artifact}} -e {{.query.encoded}}
+              chdir: /matera/continuous-deployment/core
+              format: json
+              return_command: false
+        # TODO: Change query string to use payload (request body). Payload (request body) approach allows link as value.
+        query_params:
+          params:
+            - name: artifact
+              regexp: .+
+              default: NONE
+            - name: encoded
+              regexp: ^false$|^true$
+              default: "true"
+          return_params: false
+  - path: /deploy/{product:.+}/{build:[0-9]+}/logs
+    authorizers:
+      - basic
+    methods:
+      GET:
+        type: shell
+        description: Shell task that exposes automatic deploy (send logs)
+        config:
+          single_result: 0
+          commands:
+            - command: ./send-logs.sh -p {{.url.product}} -b {{.url.build}} -t {{.query.type}}
+              chdir: /matera/continuous-deployment/core
+              format: json
+              return_command: false
+        # TODO: Change query string to use payload (request body). Payload (request body) approach allows link as value.
+        query_params:
+          params:
+            - name: type
+              regexp: ^fat$|^slim$
+              default: slim
+          return_params: false
+  - path: /deploy/all
+    methods:
+      GET:
+        type: shell
+        config:
+          commands:
+            - command: ./install-all-latest-tomcat.sh
+              chdir: /matera/continuous-deployment/core
+              format: text
+              return_command: false
+  - path: /pull/{ref:.+}
+    authorizers:
+      - basic
+    methods:
+      PATCH:
+        type: shell
+        description: Shell task that pull patch of the ref
+        config:
+          single_result: 0
+          commands:
+            - command: ./git-pull.sh -r {{.url.ref}}
+              chdir: /matera/continuous-deployment
+  - path: /image/{service:.+}/{tag:.+}
+    authorizers:
+      - basic
+    methods:
+      PUT:
+        type: shell
+        description: Shell task that exposes automatic deploy for Queue Consumer
+        config:
+          single_result: 0
+          commands:
+            - command: ./install-and-run.sh {{.url.service}} {{.url.tag}} {{.query.server}}
+              chdir: /matera/continuous-deployment/micro-service
+              format: json
+              return_command: false
+        query_params:
+          params:
+            - name: server
+              regexp: .+
+              default: NONE
+          return_params: false
+  - path: /instance/basic-server
+    methods:
+      POST:
+        type: shell
+        config:
+          commands:
+            - command: ./run.sh {{.query.port}}
+              chdir: /matera/continuous-deployment/basic-server
+              format: text
+              return_command: false
+        query_params:
+          params:
+            - name: port
+              regexp: .+
+              default: NONE
+authorizers:
+  basic:
+    type: basic
+    config:
+      username: c6bank-continuous-deployment
+      password: c6bank-continuous-deployment
