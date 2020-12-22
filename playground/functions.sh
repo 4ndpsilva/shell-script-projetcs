@@ -250,10 +250,23 @@ IFS=$OLD
 }
 
 function verifyAvailableSpace(){
-  #Obtem espaço disponível na partição /ebs
-  AVAILABLE_SPACE=$(df | awk '/ebs/ { print $4 }')
+  PARTITION=$2
+    
+  if [ ! -z $PARTITION ]; then
+    EXIST_PARTITION=$(df | awk '/${PARTITION}/ { print $4 }' | sed -n 1p)
 
-  #Converte de Gigabyte para Kilobyte
+    if [ -z $EXIST_PARTITION ]; then
+      echo "A partição informada não existe" >&2
+      exit 1
+    fi
+  else
+    PARTITION="boot"
+  fi
+exit 1
+  #Obtem espaço disponível na partição /ebs
+  AVAILABLE_SPACE=$(df | awk '/${PARTITION}/ { print $4 }')
+
+  #Conversão de Gigabyte para Kilobyte
   REQUIRED_SPACE=$(($1 * 1024 * 1024))
 
   if [ $REQUIRED_SPACE -gt $AVAILABLE_SPACE ]; then
