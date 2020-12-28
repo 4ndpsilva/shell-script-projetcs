@@ -147,16 +147,19 @@ endpoints:
         type: shell
         config:
           commands:
-            - command: ./clear-docker-image.sh {{.query.env}} {{.query.tag}}
+            - command: ./clean-docker-image.sh {{.query.imageEnv}} {{.query.tag}} {{.query.user}}
               chdir: /matera/continuous-deployment/docker-db
               format: text
               return_command: false
         query_params:
           params:
-            - name: env
+            - name: imageEnv
               regexp: .+
               default: NONE
             - name: tag
+              regexp: .+
+              default: NONE
+            - name: user
               regexp: .+
               default: NONE               
   - path: /deploy/{product:.+}/{build:[0-9]+}
