@@ -1,5 +1,8 @@
 #!/bin/bash
 
+NAME1=$1
+NAME2=$2
+
 if [ "$#" -gt 2 ]; then
   echo "Apenas dois nomes são permitidos"
   echo "Tente de novo"
@@ -11,12 +14,9 @@ if [ "$#" = 0 ]; then
   exit 1
 fi
 
-NAME1=$1
-NAME2=$2
 
 if [ ! -z "$NAME1" ] && [ ! -z "$NAME2" ]; then
   echo "Nomes: $NAME1 - $NAME2"
 else
-  NAME1=$1
   echo "Nome: $NAME1" 
 fi

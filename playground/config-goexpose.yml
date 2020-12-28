@@ -147,7 +147,7 @@ endpoints:
         type: shell
         config:
           commands:
-            - command: ./clearDockerImages.sh {{.query.env}} {{.query.tag}}
+            - command: ./clear-docker-image.sh {{.query.env}} {{.query.tag}}
               chdir: /matera/continuous-deployment/docker-db
               format: text
               return_command: false
