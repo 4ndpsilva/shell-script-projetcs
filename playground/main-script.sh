@@ -24,4 +24,8 @@ IMAGES[18]="mongo:3.6.21-xenial"
 IMAGES[19]="hello-world:nanoserver-1809"
 IMAGES[20]="node:current-alpine3.12"
 
-source ./docker-pull.sh ${IMAGES[@]}
+#source ./docker-pull.sh ${IMAGES[@]}
+
+source ./teste.sh
+
+checkParams "main-script" "IMAGE_ENV" "TAG" "USER"
