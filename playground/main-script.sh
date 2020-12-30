@@ -26,6 +26,8 @@ IMAGES[20]="node:current-alpine3.12"
 
 #source ./docker-pull.sh ${IMAGES[@]}
 
-source ./teste.sh
+source ./functions-test.sh
 
-checkParams "main-script" "IMAGE_ENV" "TAG" "USER"
+checkParams "main-script" "TAG" "USER"
+
+setBusyStatus "CLEAN"
