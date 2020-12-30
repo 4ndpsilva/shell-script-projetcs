@@ -6,10 +6,8 @@ USER=$(for i in $@; do :; done; echo "$i")
 function checkParams(){
   if [ ! "$NP" -gt 0 ]; then
     PARAMS=""
-    OPT=""
-    ARRAY=$*
 
-    for PARAM in ${ARRAY[@]}; do  
+    for PARAM in $*; do  
       if [ "$PARAM" != $1 ] && [ "$PARAM" != ${!#} ]; then
         PARAMS=$PARAMS""$PARAM" "
       fi
