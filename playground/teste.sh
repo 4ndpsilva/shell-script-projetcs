@@ -1,7 +1,7 @@
 #!/bin/bash
 
 NP=$#
-USER=$(for i in $@; do :; done; echo "$i")
+USER=$(for i in $*; do :; done; echo "$i")
 
 function checkParams(){
   if [ ! "$NP" -gt 0 ]; then
