@@ -1,22 +1,19 @@
 ===================================================
-qui 24 dez 2020 15:04:54 -03
+qua 06 jan 2021 16:15:07 -03
 ===================================================
-qui 24 dez 2020 15:04:59 -03
-===================================================
-qui 24 dez 2020 15:05:16 -03
-===================================================
-qui 24 dez 2020 15:05:20 -03
-Imagem com a tag [ . ] e ambiente [ redis ] excluída com sucesso
-===================================================
-qui 24 dez 2020 15:05:30 -03
-===================================================
-qui 24 dez 2020 15:06:37 -03
-Imagem com a tag [ . ] e ambiente [ redis ] excluída com sucesso
-===================================================
-qui 24 dez 2020 15:24:40 -03
-===================================================
-qui 24 dez 2020 15:24:45 -03
-===================================================
-qui 24 dez 2020 15:24:52 -03
-===================================================
-qui 24 dez 2020 15:25:00 -03
+qua 06 jan 2021 16:16:04 -03
+Untagged: mongo:3.6.21-xenial
+Untagged: mongo@sha256:767a78143c3b1ae2e039c3a6f98e68b818213b866d494ee58abdd4f8203e81de
+Deleted: sha256:ab27d3bb28c66354b180c0c6e59580567321da9cee0d85c1ca67f3460f1825d0
+Deleted: sha256:29acbe5d54dedf216568a4e734263dc8affb1081ca580f742de05805248f5a52
+Deleted: sha256:34678490e8ab9991f8242eaa2482b73fde8acb1e50ec7d53bbf96f7d588fd406
+Deleted: sha256:4f9fe43f00855fdfbf1e1df7a9fa260820578c99c39dce705e18f4d9d9477eb5
+Deleted: sha256:cfd2afd782d81e2b8c68cb153ecaf5ab4b9162335ffcb5182f36060277525992
+Deleted: sha256:db190707adfa7e15be32d90af2d7ee020982b89dd508eed643fedce1e87eeb04
+Deleted: sha256:44d7eff26795b9ddf4907ed535fe39eab628f36b354ceb9154b611d5f6ed7ddb
+Deleted: sha256:19c2eee957f4b8978ccfc3cfbd67cd1f1caf9fd8e8d063eaaaf5226325456f2a
+Deleted: sha256:d9ba54864ba279f0e6f26093c3d548cdf2f6832e443ff43913fac7c51fe3d940
+Deleted: sha256:57619756b2df3a82b23a72eba3f6f5e68d7b8c8e43107b3ab2104270813ed6a1
+
+Imagem removida com sucesso
+

@@ -35,36 +35,39 @@ IMAGE_ENV=$1
 #Tag da imagem docker
 TAG=$2
 
-if [ -z "$IMAGE_ENV" ] || [ "$IMAGE_ENV" = "NONE" ]; then
-  echo "É necessário informar um ambiente" >&2
-  exit 1
+
+if [ "$IMAGE_ENV" = "Local" ]; then
+  #IMAGE_ENV="local/database"
+  IMAGE_ENV="python"
+elif [ "$IMAGE_ENV" = "Remoto" ]; then
+  #IMAGE_ENV="536311044217.dkr.ecr.us-east-1.amazonaws.com/c6bank/database"
+  IMAGE_ENV="mongo"
 fi
 
-EXIST_IMAGE_ENV=$(docker images | grep -w $IMAGE_ENV | awk '{ print $1 }' | sed -n 1p)
+EXIST_IMAGE_ENV=$(docker images | grep -wF $IMAGE_ENV | awk '{ print $1 }' | sed -n 1p)
 
 if [ -z "$EXIST_IMAGE_ENV" ]; then
-  echo "O ambiente informado não existe" >&2
+  echo "A imagem ${IMAGE_ENV} não existe" >&2
   exit 1
 fi
 
-if [ -z "$TAG" ] || [ "$TAG" = "NONE" ]; then
-  echo "É necessário informar uma tag" >&2
-  exit 1
-fi
-
-EXIST_TAG=$(docker images | grep -w $IMAGE_ENV | grep -w $TAG | awk '{ print $2 }' | sed -n 1p)
+EXIST_TAG=$(docker images | grep -wF $IMAGE_ENV | grep -wF $TAG | awk '{ print $2 }' | sed -n 1p)
 
 if [ -z "$EXIST_TAG" ]; then
-  echo "A tag informada não existe" >&2
+  echo "A tag ${TAG} não existe" >&2
   exit 1
 fi
 
 if [[ "$TAG" = *"latest"* ]] || [[ "$TAG" = *"current"* ]]; then
-  echo "Não é permitido apagar imagens com as tags 'latest' ou 'current'" >&2
+  echo "Não é permitido remover imagens com as tags 'latest' ou 'current'" >&2
   exit 1
 fi
 
-docker rmi -f $(docker images | grep -w $IMAGE_ENV | grep -w $TAG | awk '{ print $3 }') >> $LOGFILE
-echo "Imagem excluída com sucesso" >> $LOGFILE
+IMAGE_ID=$(docker images | grep -wF $IMAGE_ENV | grep -wF $TAG | awk '{ print $3 }')
+docker rmi -f $IMAGE_ID >> $LOGFILE
+
+echo "" >> $LOGFILE
+echo "Imagem removida com sucesso" >> $LOGFILE
+echo "" >> $LOGFILE
 
 #setIdleStatus
