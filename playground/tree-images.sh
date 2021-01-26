@@ -1,23 +1,36 @@
 #!/bin/bash
 
-declare -A treeImages
-declare -A hashImageId
+declare -A tree
+declare -A hashMapIds
+declare -A hashMapSizes
 
+images=()
+c=0
+
+#Recupera os labels das imagens no formato imagem:tag
 for imageTag in $(docker images | grep -v ^53* | grep -v \\scurrent\\s | grep -v \\slatest\\s | awk '{print $1 ":" $2}'); do
-  images=()
+  images[c]=$imageTag
 
+  if [ "$imageTag" = "REPOSITORY:TAG" ]; then
+    unset 'images[c]'
+  fi
+
+  c=$((c + 1))
+done
+
+
+
+for imageTag in ${images[@]}; do
+  hashes=()
   i=0  
-  for hash in $(docker history $imageTag | grep -v IMAGE | grep -v "<missing>" | awk '{ print $1 }'); do
-    images[i]=$hash
+  
+  for hash in $(docker history $imageTag | grep -vi IMAGE | grep -v "<missing>" | awk '{ print $1 }'); do
+    hashes[i]=$hash
     i=$((i + 1))  
   done
 
-  treeImages[$imageTag]=${images[@]}  
- 
-  i=0
-  for h in $(docker images $imageTag | grep -v IMAGE | awk '{print $3}'); do
-    hashImageId[$imageTag]=$h
-  done
+  tree[$imageTag]=${hashes[@]}
+  hashMapIds[$imageTag]=$(docker images $imageTag | grep -vi IMAGE | awk '{print $3}')
 done
 
-echo ${hashImageId[*]}
+echo ${hashMapIds[@]}
