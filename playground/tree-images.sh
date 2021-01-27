@@ -30,7 +30,14 @@ for imageTag in ${images[@]}; do
   done
 
   tree[$imageTag]=${hashes[@]}
+  
   hashMapIds[$imageTag]=$(docker images $imageTag | grep -vi IMAGE | awk '{print $3}')
+  hashMapSizes[$imageTag]=$(docker images $imageTag | grep -vi IMAGE | awk '{print $NF}')
 done
 
-echo ${hashMapIds[@]}
+if [ ${#images[@]} -gt 0 ]; then
+  echo ${hashMapIds[@]}
+  echo ${images[@]}
+else
+  echo "LISTAS VAZIAS"  
+fi
