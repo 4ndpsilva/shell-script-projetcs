@@ -11,13 +11,12 @@ c=0
 for imageTag in $(docker images | grep -v ^53* | grep -v \\scurrent\\s | grep -v \\slatest\\s | awk '{print $1 ":" $2}'); do
   images[c]=$imageTag
 
-  if [ "$imageTag" = "REPOSITORY:TAG" ]; then
+  if [[ "$imageTag" = "REPOSITORY:TAG" ]] || [[ "$imageTag" = *"<none>"* ]]; then
     unset 'images[c]'
   fi
 
   c=$((c + 1))
 done
-
 
 
 for imageTag in ${images[@]}; do
@@ -28,16 +27,15 @@ for imageTag in ${images[@]}; do
     hashes[i]=$hash
     i=$((i + 1))  
   done
-
   tree[$imageTag]=${hashes[@]}
   
   hashMapIds[$imageTag]=$(docker images $imageTag | grep -vi IMAGE | awk '{print $3}')
   hashMapSizes[$imageTag]=$(docker images $imageTag | grep -vi IMAGE | awk '{print $NF}')
 done
 
-if [ ${#images[@]} -gt 0 ]; then
-  echo ${hashMapIds[@]}
-  echo ${images[@]}
-else
-  echo "LISTAS VAZIAS"  
-fi
+for key in ${images[@]}; do
+  #echo ${tree[$key]} | awk '{print $1}'
+
+  echo ""
+  echo ${hashMapSizes[$key]}
+done
