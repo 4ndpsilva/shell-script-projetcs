@@ -18,6 +18,7 @@ for imageTag in $(docker images | grep -v ^53* | grep -v \\scurrent\\s | grep -v
   c=$((c + 1))
 done
 
+
 # Criação do map [image:tag] -> (lista de hashes)
 for imageTag in ${keys[@]}; do
   hashes=()
@@ -32,13 +33,11 @@ for imageTag in ${keys[@]}; do
   hashMapSizes[$imageTag]=$(docker images $imageTag | grep -vi IMAGE | awk '{print $NF}')
 done
 
-#set -ex
-# Montar map somente com as imagens que podem ser apagadas
+
+# selecionar as hashes sem repetição
 for imageTag in ${keys[@]}; do
   hashes=(${tree[$imageTag]})
   hash=${hashes[0]}
-
-  #set -ex
   
   for key in ${keys[@]}; do
     if [ "$imageTag" != "$key" ]; then
