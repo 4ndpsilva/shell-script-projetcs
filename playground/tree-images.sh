@@ -80,19 +80,15 @@ declare -A mapUnique
 
 
 for key in ${!mapUniqueHashes[@]}; do
-echo $key
-: '  for tag in ${tags[@]}; do
-    if [ "$key" != "$tag" ]; then
-      echo "Found: $key"   
+  has=0
+  for tag in ${tags[@]}; do
+    if [ "$key" = "$tag" ]; then
+      has=1
     fi
   done
-'
-done
 
-
-exit
-echo ""
-
-for key in ${tags[@]}; do
-  echo $key
+  if [ $has -eq 0 ]; then
+    echo $key
+    mapUnique[$key]=${mapUniqueHashes[$key]}
+  fi
 done
