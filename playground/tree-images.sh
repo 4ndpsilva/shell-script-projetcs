@@ -84,6 +84,7 @@ for key in ${!mapUniqueHashes[@]}; do
   for tag in ${tags[@]}; do
     if [ "$key" = "$tag" ]; then
       has=1
+      break
     fi
   done
 
