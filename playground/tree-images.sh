@@ -1,13 +1,11 @@
 #!/bin/bash
 
-declare -A tree
-declare -A hashMapSizes
-declare -A hashMapReclaimable
+
 
 keys=()
 c=0
 
-#Recupera os labels das imagens no formato imagem:tag
+# Recupera os labels das imagens no formato imagem:tag
 for imageTag in $(docker images | grep -v ^53* | grep -v \\scurrent\\s | grep -v \\slatest\\s | awk '{print $1 ":" $2}'); do
   keys[c]=$imageTag
 
@@ -19,7 +17,11 @@ for imageTag in $(docker images | grep -v ^53* | grep -v \\scurrent\\s | grep -v
 done
 
 
-# Criação do map [image:tag] -> (lista de hashes)
+
+declare -A mapAllHashes
+declare -A mapSizes
+
+# Criação do map no formato image:tag -> (lista de hashes)
 for imageTag in ${keys[@]}; do
   hashes=()
   i=0  
@@ -29,36 +31,68 @@ for imageTag in ${keys[@]}; do
     i=$((i + 1))
   done
   
-  tree[$imageTag]=${hashes[@]}
-  hashMapSizes[$imageTag]=$(docker images $imageTag | grep -vi IMAGE | awk '{print $NF}')
+  mapAllHashes[$imageTag]=${hashes[@]}
+  mapSizes[$imageTag]=$(docker images $imageTag | grep -vi IMAGE | awk '{print $NF}')
 done
 
 
-# selecionar as hashes sem repetição
+
+
+declare -A mapUniqueHashes
+declare -A mapTags
+
+#:<<'cmt'
 for imageTag in ${keys[@]}; do
-  hashes=(${tree[$imageTag]})
-  hash=${hashes[0]}
+  hashes=(${mapAllHashes[$imageTag]})
+  mapUniqueHashes[$imageTag]=${hashes[0]}
+done
+#cmt
+
+
+# montar lista com hashes de tags repetidas
+for key in ${!mapUniqueHashes[@]}; do
+  hash=${mapUniqueHashes[$key]}
   
-  for key in ${keys[@]}; do
-    if [ "$imageTag" != "$key" ]; then
-      hashes2=(${tree[$key]})
-      qtd=0
+  i=0
+  tags=()
 
-      for h in ${hashes2[@]}; do
-        if [ "$hash" = "$h" ]; then
-          qtd=$((qtd + 1))      
-        fi
-      done
+  for k in ${!mapUniqueHashes[@]}; do
+    if [ "$k" != "$key" ]; then
+      hashToCompare=${mapUniqueHashes[$k]}
 
-      if [ $qtd -eq 0 ]; then
-        hashMapReclaimable[$imageTag]=$hash
-        break
+      if [ "$hash" = "$hashToCompare" ]; then
+        tags[$i]=$k 
+        i=$((i + 1))
       fi    
+    else
+      tags[$i]=$k
+      i=$((i + 1))
     fi
   done
+
+  if [ ${#tags[@]} -gt 0 ]; then
+    mapTags[$key]=${tags[@]}
+  fi
+done  
+
+
+declare -A mapUnique
+
+
+for key in ${!mapUniqueHashes[@]}; do
+echo $key
+: '  for tag in ${tags[@]}; do
+    if [ "$key" != "$tag" ]; then
+      echo "Found: $key"   
+    fi
+  done
+'
 done
 
-#Exibição da lista de imagens e/ou tags
-for key in ${hashMapReclaimable[@]}; do
-  echo "$key"
-done  
+
+exit
+echo ""
+
+for key in ${tags[@]}; do
+  echo $key
+done
