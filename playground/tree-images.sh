@@ -18,7 +18,7 @@ done
 
 
 
-declare -A mapAllHashes
+declare -A mapHistoryImages
 declare -A mapSizes
 
 # Criação do map no formato image:tag -> (lista de hashes)
@@ -31,34 +31,33 @@ for imageTag in ${keys[@]}; do
     i=$((i + 1))
   done
   
-  mapAllHashes[$imageTag]=${hashes[@]}
+  mapHistoryImages[$imageTag]=${hashes[@]}
   mapSizes[$imageTag]=$(docker images $imageTag | grep -vi IMAGE | awk '{print $NF}')
 done
 
 
 
 
-declare -A mapUniqueHashes
+declare -A mapImages
+
+for imageTag in ${keys[@]}; do
+  hashes=(${mapHistoryImages[$imageTag]})
+  mapImages[$imageTag]=${hashes[0]}
+done
+
+
+# montar lista de tags com hashes repetidos
 declare -A mapTags
 
-#:<<'cmt'
-for imageTag in ${keys[@]}; do
-  hashes=(${mapAllHashes[$imageTag]})
-  mapUniqueHashes[$imageTag]=${hashes[0]}
-done
-#cmt
-
-
-# montar lista com hashes de tags repetidas
-for key in ${!mapUniqueHashes[@]}; do
-  hash=${mapUniqueHashes[$key]}
+for key in ${!mapImages[@]}; do
+  hash=${mapImages[$key]}
   
   i=0
   tags=()
 
-  for k in ${!mapUniqueHashes[@]}; do
+  for k in ${!mapImages[@]}; do
     if [ "$k" != "$key" ]; then
-      hashToCompare=${mapUniqueHashes[$k]}
+      hashToCompare=${mapImages[$k]}
 
       if [ "$hash" = "$hashToCompare" ]; then
         tags[$i]=$k 
@@ -70,16 +69,17 @@ for key in ${!mapUniqueHashes[@]}; do
     fi
   done
 
+# modificar essa parte
   if [ ${#tags[@]} -gt 0 ]; then
     mapTags[$key]=${tags[@]}
   fi
 done  
 
 
+# Imagens que não tem hash repetidos
 declare -A mapUnique
 
-
-for key in ${!mapUniqueHashes[@]}; do
+for key in ${!mapImages[@]}; do
   has=0
   for tag in ${tags[@]}; do
     if [ "$key" = "$tag" ]; then
@@ -89,7 +89,16 @@ for key in ${!mapUniqueHashes[@]}; do
   done
 
   if [ $has -eq 0 ]; then
-    echo $key
-    mapUnique[$key]=${mapUniqueHashes[$key]}
+    mapUnique[$key]=${mapImages[$key]}
   fi
+done
+
+for k in ${!mapHistoryImages[@]}; do
+  echo $k
+  hashes=(${mapHistoryImages[$k]}) 
+  
+  for i in ${hashes[@]}; do
+    echo "---- $i"
+  done
+  echo "" 
 done
