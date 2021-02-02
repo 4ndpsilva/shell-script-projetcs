@@ -1,40 +1,24 @@
 #!/bin/bash
 
 
-
-keys=()
-c=0
-
-# Recupera os labels das imagens no formato imagem:tag
-for imageTag in $(docker images | grep -v ^53* | grep -v \\scurrent\\s | grep -v \\slatest\\s | awk '{print $1 ":" $2}'); do
-  keys[c]=$imageTag
-
-  if [[ "$imageTag" = "REPOSITORY:TAG" ]] || [[ "$imageTag" = *"<none>"* ]]; then
-    unset 'keys[c]'
-  fi
-
-  c=$((c + 1))
-done
-
-
-
 declare -A mapHistoryImages
 declare -A mapSizes
 
-# Criação do map no formato image:tag -> (lista de hashes)
-for imageTag in ${keys[@]}; do
-  hashes=()
-  i=0  
-  
-  for hash in $(docker history $imageTag | grep -vi IMAGE | grep -v "<missing>" | awk '{ print $1 }'); do
-    hashes[i]=$hash
-    i=$((i + 1))
-  done
-  
-  mapHistoryImages[$imageTag]=${hashes[@]}
-  mapSizes[$imageTag]=$(docker images $imageTag | grep -vi IMAGE | awk '{print $NF}')
+# Recupera os labels das imagens no formato imagem:tag
+for imageTag in $(docker images | grep -v ^53* | grep -v \\scurrent\\s | grep -v \\slatest\\s | awk '{print $1 ":" $2}'); do
+  if [[ "$imageTag" != "REPOSITORY:TAG" ]] && [[ "$imageTag" != *"<none>"* ]]; then
+    hashes=()
+    i=0  
+    
+    for hash in $(docker history $imageTag | grep -vi IMAGE | grep -v "<missing>" | awk '{ print $1 }'); do
+        hashes[i]=$hash
+        i=$((i + 1))
+    done
+    
+    mapHistoryImages[$imageTag]=${hashes[@]}
+    mapSizes[$imageTag]=$(docker images $imageTag | grep -vi IMAGE | awk '{print $NF}')  
+  fi
 done
-
 
 
 # Monta um map com os primeiros hashes dos históricos de cada imagem
@@ -53,7 +37,7 @@ function getMapTags(){
   for key in ${!mapImages[@]}; do
     hash=${mapImages[$key]}
     
-    i=0
+    local i=0
     tags=()
 
     for k in ${!mapImages[@]}; do
