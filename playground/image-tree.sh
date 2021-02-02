@@ -4,8 +4,8 @@
 declare -A mapHistoryImages
 declare -A mapSizes
 
-# Recupera os labels das imagens no formato imagem:tag
-for imageTag in $(docker images | grep -v ^53* | grep -v \\scurrent\\s | grep -v \\slatest\\s | awk '{print $1 ":" $2}'); do
+# Recupera os labels das imagens no formato imagem:tag - imagem:tag servirá de chave para acesso aos valores dos maps
+for imageTag in $(docker images | grep -v \\scurrent\\s | grep -v \\slatest\\s | awk '{print $1 ":" $2}'); do
   if [[ "$imageTag" != "REPOSITORY:TAG" ]] && [[ "$imageTag" != *"<none>"* ]]; then
     hashes=()
     i=0  
@@ -21,7 +21,7 @@ for imageTag in $(docker images | grep -v ^53* | grep -v \\scurrent\\s | grep -v
 done
 
 
-# Monta um map com os primeiros hashes dos históricos de cada imagem
+# Monta um map com o primeiro ID do histórico de cada imagem
 declare -A mapImages
 
 for key in ${!mapHistoryImages[@]}; do
@@ -30,10 +30,26 @@ for key in ${!mapHistoryImages[@]}; do
 done
 
 
-# Monta lista de imagens com hashes repetidos (tags)
-function getMapTags(){
-  declare -A mapTags
+# Monta um array com todos IDs das imagens
+function getAllHashes(){
+  allHashes=()
+  local i=0
 
+  for key in ${!mapHistoryImages[@]}; do
+    hashes=(${mapHistoryImages[$key]})
+    
+    for h in ${hashes[@]}; do 
+      allHashes[$i]=$h
+      i=$((i + 1))
+    done
+  done
+}
+
+
+# Monta map com as tags de determinada imagem
+declare -A mapTags
+
+function getMapTags(){
   for key in ${!mapImages[@]}; do
     hash=${mapImages[$key]}
     
@@ -54,21 +70,20 @@ function getMapTags(){
       fi
     done
 
-    #MODIFICAR ESSA PARTE
-    if [ ${#tags[@]} -gt 0 ]; then
+    if [ ${#tags[@]} -gt 1 ]; then
       mapTags[$key]=${tags[@]}
     fi
   done  
 }
 
 
+# Imagens que não tem IDs repetidos no seu histórico
+declare -A mapUnique
 
-# Imagens que não tem hash repetidos no seu histórico
 function getMapUnique(){
-  declare -A mapUnique
 
   for key in ${!mapImages[@]}; do
-    has=0
+    local has=0
 
     for tag in ${tags[@]}; do
       if [ "$key" = "$tag" ]; then
@@ -84,25 +99,12 @@ function getMapUnique(){
 }
 
 
-function getAllHashes(){
-  allHashes=()
-  i=0
+# Monta map com imagens que podem ser apagadas
+declare -A sheets
 
-  for key in ${!mapHistoryImages[@]}; do
-    hashes=(${mapHistoryImages[$key]})
-    
-    for h in ${hashes[@]}; do 
-      allHashes[$i]=$h
-      i=$((i + 1))
-    done
-  done
-}
-
-
-function getSheets(){
+function getReclaimableImages(){
+  getMapUnique
   getAllHashes
-
-  declare -A sheets
 
   if [ ${#mapUnique[@]} -gt 0 ] ; then
     for key in ${!mapUnique[@]}; do
@@ -122,4 +124,26 @@ function getSheets(){
       fi
     done
   fi
+} 
+
+function showImages(){
+  OUTPUT=$1
+  getReclaimableImages
+  getMapTags
+
+  for key in ${!sheets[@]}; do
+    tag=$(echo $key | cut --delimiter=':' --fields=2)
+
+    echo "TAG: $tag" >> $OUTPUT
+    echo "SIZE: ${mapSizes[$key]}" >> $OUTPUT
+    echo "" >> $OUTPUT
+  done
+
+  for key in ${!mapTags[@]}; do
+    tag=$(echo $key | cut --delimiter=':' --fields=2)
+
+    echo "TAG: $tag" >> $OUTPUT
+    echo "SIZE: ${mapSizes[$key]}" >> $OUTPUT
+    echo "" >> $OUTPUT
+  done
 }
