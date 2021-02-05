@@ -4,19 +4,19 @@
 declare -A mapHistoryImages
 declare -A mapSizes
 
-# Recupera os labels das imagens no formato imagem:tag - imagem:tag servirá de chave para acesso aos valores dos maps
-for imageTag in $(docker images | grep -v \\scurrent\\s | grep -v \\slatest\\s | awk '{print $1 ":" $2}'); do
-  if [[ "$imageTag" != "REPOSITORY:TAG" ]] && [[ "$imageTag" != *"<none>"* ]]; then
+# Recupera os aliases das imagens no formato imagem:tag - imagem:tag servirá de chave para acesso aos valores dos maps
+for alias in $(docker images | grep -v \\scurrent\\s | grep -v \\slatest\\s | awk '{print $1 ":" $2}'); do
+  if [[ "$alias" != "REPOSITORY:TAG" ]] && [[ "$alias" != *"<none>"* ]]; then
     hashes=()
     i=0  
     
-    for hash in $(docker history $imageTag | grep -vi IMAGE | grep -v "<missing>" | awk '{ print $1 }'); do
+    for hash in $(docker history $alias | grep -vi IMAGE | grep -v "<missing>" | awk '{ print $1 }'); do
         hashes[i]=$hash
         i=$((i + 1))
     done
     
-    mapHistoryImages[$imageTag]=${hashes[@]}
-    mapSizes[$imageTag]=$(docker images $imageTag | grep -vi IMAGE | awk '{print $NF}')  
+    mapHistoryImages[$alias]=${hashes[@]}
+    mapSizes[$alias]=$(docker images $alias | grep -vi IMAGE | awk '{print $NF}')  
   fi
 done
 
@@ -97,6 +97,7 @@ function getMapUnique(){
     fi
   done
 }
+
 
 
 # Monta map com imagens que podem ser apagadas
