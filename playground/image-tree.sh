@@ -31,8 +31,9 @@ done
 
 
 ###################################### Monta um array com todos IDs de todas imagens ######################################
-function getAllHashes(){
-  allHashes=()
+allHashes=()
+
+function getAllHashes(){  
   local i=0
 
   for alias in ${!mapHistoryImages[@]}; do
@@ -42,7 +43,6 @@ function getAllHashes(){
       allHashes[$i]=$h
       i=$((i + 1))
     done
-    echo ""
   done
 }
 
@@ -51,53 +51,34 @@ function getAllHashes(){
 declare -A mapTags
 
 function getMapTags(){
+  getAllHashes
+  local all=(${allHashes[@]})
+
   for alias in ${!mapFirstHash[@]}; do
-    hash=${mapFirstHash[$alias]}
-    
-    local i=0
-    tags=()
-    echo $hash
+    hash=${mapFirstHash[$alias]}  
+    q=0
 
-    for k in ${!mapFirstHash[@]}; do
-      if [ "$k" != "$alias" ]; then
-        hashToCompare=${mapFirstHash[$k]}
-
-        if [ "$hash" = "$hashToCompare" ]; then
-          tags[$i]=$k 
-          i=$((i + 1))
-        fi    
-      else
-        tags[$i]=$k
-        i=$((i + 1))
+    for h in ${all[@]}; do
+      if [ "$hash" = "$h" ]; then
+        q=$((q + 1))
       fi
-    done
+    done    
 
-    if [ ${#tags[@]} -gt 1 ]; then
-      mapTags[$alias]=${tags[@]}
+    if [ $q -gt 1 ]; then
+      mapTags[$alias]=$hash
+      unset mapFirstHash[$alias]
     fi
-  done  
+  done;
 }
 
-getMapTags
 
 ###################################### Imagens que não tem IDs repetidos no seu histórico ######################################
 declare -A mapUnique
 
-function getMapUnique(){
+function getMapUniqueId(){
 
-  for key in ${!mapFirstHash[@]}; do
-    local has=0
-
-    for tag in ${tags[@]}; do
-      if [ "$key" = "$tag" ]; then
-        has=1
-        break
-      fi
-    done
-
-    if [ $has -eq 0 ]; then
-      mapUnique[$key]=${mapFirstHash[$key]}
-    fi
+  for alias in ${!mapFirstHash[@]}; do
+    mapUnique[$alias]=${mapFirstHash[$alias]}
   done
 }
 
@@ -105,34 +86,19 @@ function getMapUnique(){
 ###################################### Monta map com imagens que podem ser apagadas ######################################
 declare -A sheets
 
-function getReclaimableImages(){
-  getMapUnique
-  getAllHashes
-
-  if [ ${#mapUnique[@]} -gt 0 ] ; then
-    for key in ${!mapUnique[@]}; do
-      hashes=(${mapUnique[$key]})
-      topHash=${hashes[0]}
-      
-      local qtd=0
-
-      for hash in ${allHashes[@]}; do
-        if [ "$hash" = "$topHash" ]; then
-          qtd=$((qtd + 1))
-        fi
-      done
-
-      if [ $qtd = 1 ]; then
-        sheets[$key]=$topHash
-      fi
-    done
-  fi
+function unionHashes(){
+  getMapTags
+  getMapUniqueId
+  
+  for alias in ${!mapUnique[@]}; do
+    sheets[${mapUnique[$alias]}]=$alias
+  done  
 } 
+
 
 function showImages(){
   OUTPUT=$1
-  getReclaimableImages
-  getMapTags
+  unionHashes
 
   for key in ${!sheets[@]}; do
     tag=$(echo $key | cut --delimiter=':' --fields=2)

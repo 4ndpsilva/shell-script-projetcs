@@ -15,10 +15,21 @@ done
 exit
 '
 
-getMapUnique
+unionHashes
 
-for key in ${!mapUnique[@]}; do
-  echo $key
-  echo ${mapUnique[$key]}
+for alias in ${!mapTags[@]}; do
+  echo $alias
+  hashes=(${mapHistoryImages[$alias]})
+
+  for h in ${hashes[@]}; do
+    echo $h
+  done
+  echo ""  
+done
+
+exit
+
+for h in ${!sheets[@]}; do
+  echo "$h - ${sheets[$h]}"
   echo ""
 done
