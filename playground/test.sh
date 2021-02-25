@@ -6,30 +6,31 @@ OUTPUT=output.log
 
 #showImages $OUTPUT
 
-: '
-getAllHashes
 
-for i in ${allHashes[@]}; do
-  echo $i
-done
-exit
-'
+getSeparateMaps
 
-unionHashes
+echo "--------IMAGES--------"
+echo ""
 
-for alias in ${!mapTags[@]}; do
-  echo $alias
-  hashes=(${mapHistoryImages[$alias]})
+for k in ${!mapUniqueHash[@]}; do
+  echo $k
+  aliases=${mapUniqueHash[$k]}
 
-  for h in ${hashes[@]}; do
-    echo $h
+  for alias in ${aliases[@]}; do
+    echo $alias
   done
   echo ""  
 done
 
-exit
+echo "--------TAGS--------"
+echo ""
 
-for h in ${!sheets[@]}; do
-  echo "$h - ${sheets[$h]}"
-  echo ""
+for k in ${!mapRepeatedHashes[@]}; do
+  echo $k
+  aliases=${mapRepeatedHashes[$k]}
+
+  for alias in ${aliases[@]}; do
+    echo $alias
+  done
+  echo ""  
 done

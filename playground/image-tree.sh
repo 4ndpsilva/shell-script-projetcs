@@ -47,39 +47,30 @@ function getAllHashes(){
 }
 
 
-###################################### Monta um map com as tags de determinada imagem ######################################
-declare -A mapTags
+###################################### Separação de map com hashes repetidas e map com hashes únicas ######################################
+declare -A mapRepeatedHash
+declare -A mapUniqueHash
 
-function getMapTags(){
+function getSeparateMaps(){
   getAllHashes
-  local all=(${allHashes[@]})
-
+  
   for alias in ${!mapFirstHash[@]}; do
     hash=${mapFirstHash[$alias]}  
     q=0
 
-    for h in ${all[@]}; do
+    for h in ${allHashes[@]}; do
       if [ "$hash" = "$h" ]; then
         q=$((q + 1))
       fi
-    done    
+    done
 
     if [ $q -gt 1 ]; then
-      mapTags[$alias]=$hash
+      mapRepeatedHash[$alias]=$hash
       unset mapFirstHash[$alias]
+    else
+      mapUniqueHash[$alias]=$hash
     fi
   done;
-}
-
-
-###################################### Imagens que não tem IDs repetidos no seu histórico ######################################
-declare -A mapUnique
-
-function getMapUniqueId(){
-
-  for alias in ${!mapFirstHash[@]}; do
-    mapUnique[$alias]=${mapFirstHash[$alias]}
-  done
 }
 
 
@@ -87,12 +78,24 @@ function getMapUniqueId(){
 declare -A sheets
 
 function unionHashes(){
-  getMapTags
-  getMapUniqueId
+  getSeparateMaps
   
-  for alias in ${!mapUnique[@]}; do
-    sheets[${mapUnique[$alias]}]=$alias
-  done  
+  for alias in ${!mapUniqueHash[@]}; do
+    sheets[$alias]=${mapUniqueHash[$aliases]}
+  done 
+
+  for alias in ${!mapRepeatedHash[@]}; do
+    hashes=(${mapHistoryImages[$alias]})
+    q=0
+
+    for h in ${hashes[@]}; do
+      
+    done
+
+    if [ $q -gt 1 ]; then
+      sheets[$alias]=$hash
+    fi
+  done
 } 
 
 
@@ -101,14 +104,6 @@ function showImages(){
   unionHashes
 
   for key in ${!sheets[@]}; do
-    tag=$(echo $key | cut --delimiter=':' --fields=2)
-
-    echo "TAG: $tag" >> $OUTPUT
-    echo "SIZE: ${mapSizes[$key]}" >> $OUTPUT
-    echo "" >> $OUTPUT
-  done
-
-  for key in ${!mapTags[@]}; do
     tag=$(echo $key | cut --delimiter=':' --fields=2)
 
     echo "TAG: $tag" >> $OUTPUT
