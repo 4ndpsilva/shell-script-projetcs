@@ -53,11 +53,11 @@ declare -A mapUniqueHash
 
 function getSeparateMaps(){
   getAllHashes
-  
+
   for alias in ${!mapFirstHash[@]}; do
     hash=${mapFirstHash[$alias]}  
     q=0
-
+    
     for h in ${allHashes[@]}; do
       if [ "$hash" = "$h" ]; then
         q=$((q + 1))
@@ -88,9 +88,9 @@ function unionHashes(){
     hashes=(${mapHistoryImages[$alias]})
     q=0
 
-    for h in ${hashes[@]}; do
-      
-    done
+    #for h in ${hashes[@]}; do
+        
+    #done
 
     if [ $q -gt 1 ]; then
       sheets[$alias]=$hash
