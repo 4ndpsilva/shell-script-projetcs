@@ -4,9 +4,10 @@
 source ./image-tree.sh
 OUTPUT=output.log
 
+
 #showImages $OUTPUT
 
-
+#exit 
 getSeparateMaps
 
 echo "--------IMAGES--------"

@@ -81,20 +81,31 @@ function unionHashes(){
   getSeparateMaps
   
   for alias in ${!mapUniqueHash[@]}; do
-    sheets[$alias]=${mapUniqueHash[$aliases]}
+    sheets[$alias]=${mapUniqueHash[$alias]}
   done 
 
-  for alias in ${!mapRepeatedHash[@]}; do
-    hashes=(${mapHistoryImages[$alias]})
+  for aliasRep in ${!mapRepeatedHash[@]}; do
+    repeatHash=${mapRepeatedHash[$aliasRep]}
     q=0
 
-    #for h in ${hashes[@]}; do
-        
-    #done
+    for alias in ${!mapUniqueHash[@]}; do
+      for a in ${!mapHistoryImages[@]}; do
+        if [ "$alias" = "$a" ]; then
+          hashes=(${mapHistoryImages[$a]})    
+    
+          for h in ${hashes[@]}; do
+            if [ "$repeatHash" = "$h" ]; then
+              q=$((q + 1))  
+            fi      
+          done
+        fi
+      done
 
-    if [ $q -gt 1 ]; then
-      sheets[$alias]=$hash
-    fi
+      if [ $q -gt 1 ]; then
+        sheets[$aliasRep]=$repeatHash
+        break
+      fi
+    done
   done
 } 
 
@@ -103,11 +114,11 @@ function showImages(){
   OUTPUT=$1
   unionHashes
 
-  for key in ${!sheets[@]}; do
-    tag=$(echo $key | cut --delimiter=':' --fields=2)
+  for alias in ${!sheets[@]}; do
+    tag=$(echo $alias | cut --delimiter=':' --fields=2)
 
     echo "TAG: $tag" >> $OUTPUT
-    echo "SIZE: ${mapSizes[$key]}" >> $OUTPUT
+    echo "SIZE: ${mapSizes[$alias]}" >> $OUTPUT
     echo "" >> $OUTPUT
   done
 }
