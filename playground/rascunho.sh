@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-declare -A map
+declare -A mapAliases
 declare -A mapHistory
 declare -A mapSizes
 
@@ -25,18 +25,42 @@ for hash in $(docker images | grep -v \\scurrent\\s | grep -v \\slatest\\s | awk
           i=$(($i + 1))
         done
 
-        map[$hash]=${aliases[@]}
+        mapAliases[$hash]=${aliases[@]}
         mapSizes[$hash]=$(docker images $hash | grep -vi IMAGE | awk '{print $NF}')  
       fi  
     fi
-
+    
     for h in $(docker history $hash | grep -vi IMAGE | grep -v "<missing>" | awk '{ print $1 }'); do
       allHashes[$x]=$h
       x=$(($x + 1))
     done
+
+    mapHistory[$hash]=${allHashes[@]}
   fi
 done
 
-for h in ${allHashes[@]}; do
-  echo $h
+
+declare -A mapRepeatedHash
+declare -A mapUniqueHash
+
+for hash in ${!mapAliases[@]}; do
+    q=0
+    
+    for h in ${allHashes[@]}; do
+      if [ "$hash" = "$h" ]; then
+        q=$((q + 1))
+      fi
+    done
+
+    if [ $q -gt 1 ]; then
+      mapRepeatedHash[$hash]=${mapAliases[$hash]}
+    else
+      mapUniqueHash[$hash]=${mapAliases[$hash]}
+    fi
+  done;
+
+for hash in ${!mapHistory[@]}; do
+  hashes=(${mapHistory[$hash]})
+
+  echo ${mapAliases[$hash]}
 done
