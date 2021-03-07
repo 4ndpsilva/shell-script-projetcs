@@ -5,12 +5,12 @@ declare -A mapAliases
 declare -A mapHistory
 declare -A mapSizes
 
-###################################### Recupera os aliases das imagens no formato imagem:tag - imagem:tag ######################################
+###################################### Recupera os aliases das imagens no formato imagem:tag ######################################
 lastHash=""
 allHashes=()
 x=0
 
-for hash in $(docker images | grep -v "IMAGE" | grep -v \\scurrent\\s | grep -v \\slatest\\s | grep -v "<none>" | awk '{print $3}'); do
+for hash in $(docker images -f "dangling=false" | grep -v IMAGE | grep -v \\scurrent\\s | grep -v \\slatest\\s | awk '{print $3}'); do
   if [ "$hash" != "$lastHash" ]; then
     lastHash=$hash
     size=$(docker inspect $hash | jq -r '.[].RepoTags | length')
@@ -28,7 +28,7 @@ for hash in $(docker images | grep -v "IMAGE" | grep -v \\scurrent\\s | grep -v 
     c=0
     historyHashes=()
 
-    for h in $(docker history $hash | grep -vi IMAGE | grep -v "<missing>" | awk '{ print $1 }'); do
+    for h in $(docker history $hash | grep -v IMAGE | grep -v "<missing>" | awk '{ print $1 }'); do
       historyHashes[$c]=$h
       c=$(($c + 1))
 
@@ -37,12 +37,12 @@ for hash in $(docker images | grep -v "IMAGE" | grep -v \\scurrent\\s | grep -v 
     done
 
     mapHistory[$hash]=${historyHashes[@]}
-    mapSizes[$hash]=$(docker images $hash | grep -vi IMAGE | awk '{print $NF}')  
+    mapSizes[$hash]=$(docker images $hash | grep -v IMAGE | awk '{print $NF}')  
   fi
 done
 
 
-
+###################################### Separação de map com hashes repetidas e map com hashes únicas ######################################
 declare -A mapRepeatedHash
 declare -A mapUniqueHash
 
@@ -63,18 +63,37 @@ for hash in ${!mapAliases[@]}; do
 done;
 
 
+declare -A mapSheets
 
-for hash in ${!mapHistory[@]}; do
-  hashes=(${mapRepeatedHash[$hash]})
+for hash in ${!mapUniqueHash[@]}; do
+  mapSheets[$hash]=${mapUniqueHash[$hash]}
+  historyHashes=(${mapHistory[$hash]})
   q=0
-  
-  for h in ${hashes[@]}; do
-    if [ "$hash" = "$h" ]; then
-      q=$((q + 1))
-    fi
-  done
 
-  if [ $q -gt 1 ]; then
-    echo ${mapRepeatedHash[$hash]}
-  fi  
+  for h in ${!mapRepeatedHash[@]}; do
+    for hh in ${historyHashes[@]}; do
+      if [ "$h" = "$hh" ]; then
+        q=1
+        break
+      fi  
+    done
+
+    if [ $q -eq 1 ]; then
+      hashes=(${mapRepeatedHash[$h]})
+
+      if [ ${#hashes[@]} -gt 1 ]; then
+        unset hashes[0]
+        mapSheets[$h]=${hashes[@]}
+      fi
+    fi  
+  done
+done
+
+for hash in ${!mapSheets[@]}; do
+  echo $hash
+  hashList=(${mapSheets[$hash]})
+
+  for alias in ${hashList[@]}; do
+    echo "---- $alias"
+  done
 done
