@@ -1,124 +1,105 @@
 #!/bin/bash
 
 
-declare -A mapHistoryImages
+declare -A mapAliases
+declare -A mapHistory
 declare -A mapSizes
 
-###################################### Recupera os aliases das imagens no formato imagem:tag - imagem:tag ######################################
-for alias in $(docker images | grep -v \\scurrent\\s | grep -v \\slatest\\s | awk '{print $1 ":" $2}'); do
-  if [[ "$alias" != "REPOSITORY:TAG" ]] && [[ "$alias" != *"<none>"* ]]; then
-    hashes=()
-    i=0  
+###################################### Recupera os aliases das imagens no formato imagem:tag ######################################
+lastHash=""
+allHashes=()
+x=0
+
+for line in $(docker images -f "dangling=false" | grep -v IMAGE | grep -v \\scurrent\\s | grep -v \\slatest\\s | awk '{print $3 ":" $NF}'); do
+  hash=$(echo $line | cut --delimiter=':' --fields=1)
+  imageSize=$(echo $line | cut --delimiter=':' --fields=2)
+
+  if [ "$hash" != "$lastHash" ]; then
+    lastHash=$hash
+    size=$(docker inspect $hash | jq -r '.[].RepoTags | length')
     
-    for hash in $(docker history $alias | grep -vi IMAGE | grep -v "<missing>" | awk '{ print $1 }'); do
-        hashes[i]=$hash
-        i=$((i + 1))
+    if [ $size -gt 0 ]; then
+      aliases=()
+
+      for((c=0; $c < $size; c++)) do
+        aliases[$c]=$(docker inspect $hash | jq -r ".[].RepoTags[$c]")
+      done
+
+      mapAliases[$hash]=${aliases[@]}
+    fi  
+
+    c=0
+    historyHashes=()
+
+    for h in $(docker history $hash | grep -v IMAGE | grep -v "<missing>" | awk '{ print $1 }'); do
+      historyHashes[$c]=$h
+      c=$(($c + 1))
+
+      allHashes[$x]=$h
+      x=$(($x + 1))
     done
-    
-    mapHistoryImages[$alias]=${hashes[@]}
-    mapSizes[$alias]=$(docker images $alias | grep -vi IMAGE | awk '{print $NF}')  
+
+    mapHistory[$hash]=${historyHashes[@]}
+    mapSizes[$hash]=$imageSize
   fi
 done
-
-
-###################################### Monta um map com o primeiro ID do histórico de cada imagem ######################################
-declare -A mapFirstHash
-
-for alias in ${!mapHistoryImages[@]}; do
-  hashes=(${mapHistoryImages[$alias]})
-  mapFirstHash[$alias]=${hashes[0]}
-done
-
-
-###################################### Monta um array com todos IDs de todas imagens ######################################
-allHashes=()
-
-function getAllHashes(){  
-  local i=0
-
-  for alias in ${!mapHistoryImages[@]}; do
-    hashes=(${mapHistoryImages[$alias]})
-    
-    for h in ${hashes[@]}; do 
-      allHashes[$i]=$h
-      i=$((i + 1))
-    done
-  done
-}
 
 
 ###################################### Separação de map com hashes repetidas e map com hashes únicas ######################################
 declare -A mapRepeatedHash
 declare -A mapUniqueHash
 
-function getSeparateMaps(){
-  getAllHashes
-
-  for alias in ${!mapFirstHash[@]}; do
-    hash=${mapFirstHash[$alias]}  
-    q=0
-    
-    for h in ${allHashes[@]}; do
-      if [ "$hash" = "$h" ]; then
-        q=$((q + 1))
-      fi
-    done
-
-    if [ $q -gt 1 ]; then
-      mapRepeatedHash[$alias]=$hash
-      unset mapFirstHash[$alias]
-    else
-      mapUniqueHash[$alias]=$hash
-    fi
-  done;
-}
-
-
-###################################### Monta map com imagens que podem ser apagadas ######################################
-declare -A sheets
-
-function unionHashes(){
-  getSeparateMaps
+for hash in ${!mapAliases[@]}; do
+  q=0
   
-  for alias in ${!mapUniqueHash[@]}; do
-    sheets[$alias]=${mapUniqueHash[$alias]}
-  done 
+  for h in ${allHashes[@]}; do
+    if [ "$hash" = "$h" ]; then
+      q=$((q + 1))
+    fi
+  done
 
-  for aliasRep in ${!mapRepeatedHash[@]}; do
-    repeatHash=${mapRepeatedHash[$aliasRep]}
-    q=0
+  if [ $q -gt 1 ]; then
+    mapRepeatedHash[$hash]=${mapAliases[$hash]}
+  else
+    mapUniqueHash[$hash]=${mapAliases[$hash]}
+  fi
+done;
 
-    for alias in ${!mapUniqueHash[@]}; do
-      for a in ${!mapHistoryImages[@]}; do
-        if [ "$alias" = "$a" ]; then
-          hashes=(${mapHistoryImages[$a]})    
-    
-          for h in ${hashes[@]}; do
-            if [ "$repeatHash" = "$h" ]; then
-              q=$((q + 1))  
-            fi      
-          done
-        fi
-      done
 
-      if [ $q -gt 1 ]; then
-        sheets[$aliasRep]=$repeatHash
+declare -A mapSheets
+
+for hash in ${!mapUniqueHash[@]}; do
+  mapSheets[$hash]=${mapUniqueHash[$hash]}
+  historyHashes=(${mapHistory[$hash]})
+  q=0
+
+  for h in ${!mapRepeatedHash[@]}; do
+    for hh in ${historyHashes[@]}; do
+      if [ "$h" = "$hh" ]; then
+        q=1
         break
-      fi
+      fi  
     done
+
+    if [ $q -eq 1 ]; then
+      hashes=(${mapRepeatedHash[$h]})
+
+      if [ ${#hashes[@]} -gt 1 ]; then
+        unset hashes[0]
+        mapSheets[$h]=${hashes[@]}
+      fi
+    fi  
   done
-} 
+done
 
+OUTPUT=$1
 
-function showImages(){
-  OUTPUT=$1
-  unionHashes
+for hash in ${!mapSheets[@]}; do
+  aliases=(${mapSheets[$hash]})
 
-  for alias in ${!sheets[@]}; do
-    tag=$(echo $alias | cut --delimiter=':' --fields=2)
-
-    echo "TAG: $tag" >> $OUTPUT
-    echo "SIZE: ${mapSizes[$alias]}" >> $OUTPUT
+  for alias in ${aliases[@]}; do
+    echo "TAG: $alias" >> $OUTPUT
+    echo "SIZE: ${mapSizes[$hash]}" >> $OUTPUT
     echo "" >> $OUTPUT
-  done
-}
+  done  
+done
