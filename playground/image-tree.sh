@@ -1,11 +1,20 @@
 #!/bin/bash
-
+#=============================================================
+#
+#       FILE: .../docker-db/image-tree.sh
+#
+#       USAGE: source ./image-tree.sh
+#
+#       DESCRIPTION: Scripts to show images that can be removed
+#
+#=============================================================
+#
 
 declare -A mapAliases
 declare -A mapHistory
 declare -A mapSizes
 
-###################################### Recupera os aliases das imagens no formato imagem:tag ######################################
+## Recupera os aliases das imagens e usa mapas cuja chave é o hash - aliases no formato image:tag
 lastHash=""
 allHashes=()
 x=0
@@ -17,7 +26,7 @@ for line in $(docker images -f "dangling=false" | grep -v IMAGE | grep -v \\scur
   if [ "$hash" != "$lastHash" ]; then
     lastHash=$hash
     size=$(docker inspect $hash | jq -r '.[].RepoTags | length')
-    
+
     if [ $size -gt 0 ]; then
       aliases=()
 
@@ -26,7 +35,7 @@ for line in $(docker images -f "dangling=false" | grep -v IMAGE | grep -v \\scur
       done
 
       mapAliases[$hash]=${aliases[@]}
-    fi  
+    fi
 
     c=0
     historyHashes=()
@@ -45,13 +54,13 @@ for line in $(docker images -f "dangling=false" | grep -v IMAGE | grep -v \\scur
 done
 
 
-###################################### Separação de map com hashes repetidas e map com hashes únicas ######################################
+## Separação de map com hashes repetidas e map com hashes únicas
 declare -A mapRepeatedHash
 declare -A mapUniqueHash
 
 for hash in ${!mapAliases[@]}; do
   q=0
-  
+
   for h in ${allHashes[@]}; do
     if [ "$hash" = "$h" ]; then
       q=$((q + 1))
@@ -66,6 +75,7 @@ for hash in ${!mapAliases[@]}; do
 done;
 
 
+## Criação de map com as tags de imagens que poderão ser removidas
 declare -A mapSheets
 
 for hash in ${!mapUniqueHash[@]}; do
@@ -78,7 +88,7 @@ for hash in ${!mapUniqueHash[@]}; do
       if [ "$h" = "$hh" ]; then
         q=1
         break
-      fi  
+      fi
     done
 
     if [ $q -eq 1 ]; then
@@ -88,18 +98,21 @@ for hash in ${!mapUniqueHash[@]}; do
         unset hashes[0]
         mapSheets[$h]=${hashes[@]}
       fi
-    fi  
+    fi
   done
 done
 
-OUTPUT=$1
 
-for hash in ${!mapSheets[@]}; do
-  aliases=(${mapSheets[$hash]})
+function showImages(){
+  local OUTPUT=$1
 
-  for alias in ${aliases[@]}; do
-    echo "TAG: $alias" >> $OUTPUT
-    echo "SIZE: ${mapSizes[$hash]}" >> $OUTPUT
-    echo "" >> $OUTPUT
-  done  
-done
+  for hash in ${!mapSheets[@]}; do
+    local aliases=(${mapSheets[$hash]})
+
+    for alias in ${aliases[@]}; do
+      echo "TAG: $alias" >> $OUTPUT
+      echo "SIZE: ${mapSizes[$hash]}" >> $OUTPUT
+      echo "" >> $OUTPUT
+    done
+  done
+}

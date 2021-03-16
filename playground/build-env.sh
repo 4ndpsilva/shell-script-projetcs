@@ -13,6 +13,10 @@ docker run --name $CONTAINER_NAME $BASE_NAME:current /bin/bash
 docker commit $CONTAINER_NAME $BASE_NAME:v1
 docker container prune -f
 
+docker run --name $CONTAINER_NAME $BASE_NAME:current /bin/bash
+docker commit $CONTAINER_NAME $BASE_NAME:vxxx
+docker container prune -f
+
 
 #step 2
 docker run --name $CONTAINER_NAME $BASE_NAME:v1 /bin/bash

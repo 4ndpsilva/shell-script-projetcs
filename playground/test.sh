@@ -2,4 +2,6 @@
 
 
 OUTPUT=output.log
-source ./image-tree.sh $OUTPUT
+source ./image-tree.sh
+
+showImages $OUTPUT
