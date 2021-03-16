@@ -25,7 +25,7 @@ for line in $(docker images -f "dangling=false" | grep -v IMAGE | grep -v \\scur
 
   if [ "$hash" != "$lastHash" ]; then
     lastHash=$hash
-    size=$(docker inspect $hash | jq -r '.[].RepoTags | length')
+    size=$(docker inspect $hash | jq -r '.[].RepoTags | length' | grep -v :current | grep -v :latest)
 
     if [ $size -gt 0 ]; then
       aliases=()
@@ -75,7 +75,7 @@ for hash in ${!mapAliases[@]}; do
 done;
 
 
-## Criação de map com as tags de imagens que poderão ser removidas
+## Trecho para fazer a unificação de um map com as imagens que poderão ser removidas
 declare -A mapSheets
 
 for hash in ${!mapUniqueHash[@]}; do
