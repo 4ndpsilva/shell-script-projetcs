@@ -1,13 +1,12 @@
 ------------------------------------------------------------------------------------------------
 IMAGES THAT CAN BE REMOVED: 
 
-TAG: mongo:teste1
-SIZE: 493MB
+HASH: 84787d059aa8
+SIZE: 48.8GB
+  TAG:49		(536311044217.dkr.ecr.us-east-1.amazonaws.com/c6bank/database:49)
 
-TAG: 536311044217.dkr.ecr.us-east-1.amazonaws.com/c6bank/database:47
-SIZE: 49.7GB
-
-TAG: 536311044217.dkr.ecr.us-east-1.amazonaws.com/c6bank/database:v11.0
+HASH: 8bbe0ef8af38
 SIZE: 48.9GB
+  TAG:v11.0		(536311044217.dkr.ecr.us-east-1.amazonaws.com/c6bank/database:v11.0)
 
 ------------------------------------------------------------------------------------------------
